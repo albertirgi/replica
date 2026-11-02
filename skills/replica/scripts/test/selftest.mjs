@@ -6,6 +6,8 @@
 //   motion-clone-good.html → rebuilt from the report's numbers: must pass
 //   motion-clone-bad.html  → generic easing, no spin, no pops: must fail on motion, with the card's spring
 //                            reported once for everything inside it and the missing spin named
+// and a section under a header that compacts on resize, against a clone with a placeholder:
+//   resize-clone.html → must score 100 on pixels: the still fires no resize, the placeholder is left out
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -74,6 +76,15 @@ try {
   assert.match(mi[0], /section \.card .*yours ease-out.*12 elements inside move with it/, 'the spring is one finding, on the card');
   assert.ok(mi.some((t) => /span \.spin .*rotate 0° → 360°.*nothing matching moves in yours/.test(t)), 'missing spin named');
   assert.equal(mi.filter((t) => /^\*\*motion\*\* · li .*stiffness 258/.test(t)).length, 0, 'rows do not repeat the card spring');
+
+  const rref = join(dir, 'resize', 'ref');
+  r = run('capture', fixture('resize-ref.html'), '--out', rref, '--selector', '.box', '--viewports', '800x600', '--motion', '0');
+  assert.equal(r.code, 0, r.out);
+  r = run('compare', rref, fixture('resize-clone.html'));
+  assert.equal(r.code, 0, r.out);
+  const rs = JSON.parse(await readFile(join(dir, 'resize', 'round-1', 'score.json'), 'utf8'));
+  assert.equal(rs.axes.pixels, 100, 'no resize fired for the still, placeholder left out');
+  assert.match(await readFile(join(dir, 'resize', 'round-1', 'report.md'), 'utf8'), /placeholders left out of pixels: \[40,88 320×160\]/);
   console.log('selftest ok');
 } finally {
   await rm(dir, { recursive: true, force: true });

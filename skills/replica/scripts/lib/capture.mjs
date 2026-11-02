@@ -56,6 +56,18 @@ async function scrollThrough(page, selector) {
   await settleNetwork(page);
 }
 
+// A full-page screenshot resizes the page to its whole height and fires a resize event; pages
+// that react (a header that compacts) move the root's content mid-shot. Shoot the viewport when
+// the clip (document coordinates) fits in it; go full-page only when it doesn't.
+// ponytail: a root below the fold still goes full-page; scroll it into view first if that bites.
+async function shoot(page, path, clip) {
+  const v = await page.evaluate(() => ({ x: scrollX, y: scrollY, w: innerWidth, h: innerHeight }));
+  const inside = clip.x >= v.x && clip.y >= v.y && clip.x + clip.width <= v.x + v.w && clip.y + clip.height <= v.y + v.h;
+  await page.screenshot(inside
+    ? { path, clip: { ...clip, x: clip.x - v.x, y: clip.y - v.y }, caret: 'hide' }
+    : { path, clip, fullPage: true, caret: 'hide' });
+}
+
 // Actions run at t = 0 of the recording.
 export function parseAction(a = 'load') {
   const m = /^(load|reveal|hover|click|focus|scroll|scrub)(?::(.+))?$/.exec(a);
@@ -137,7 +149,7 @@ export async function captureUrl(browser, o, out) {
       const bp = await page.evaluate((s) => window.__replica.blueprint(s), o.selector);
       bp.declared = await page.evaluate(() => window.__replica.declared());
       const b = bp.root.box;
-      await page.screenshot({ path: join(dir, 'shot.png'), clip: { x: b.x, y: b.y, width: Math.max(1, b.w), height: Math.max(1, Math.min(b.h, MAX_H)) }, fullPage: true, caret: 'hide' });
+      await shoot(page, join(dir, 'shot.png'), { x: b.x, y: b.y, width: Math.max(1, b.w), height: Math.max(1, Math.min(b.h, MAX_H)) });
       await writeFile(join(dir, 'blueprint.json'), JSON.stringify(bp));
       result.roots[vpName(vp)] = b;
     } finally {
@@ -166,7 +178,7 @@ async function recordMotion(page, o, mark, action, dir) {
     const clip = o.selector
       ? { x: mark.box.x, y: mark.box.y, width: mark.box.w, height: Math.min(mark.box.h, MAX_H) }
       : await page.evaluate(() => ({ x: scrollX, y: scrollY, width: innerWidth, height: innerHeight }));
-    await page.screenshot({ path: join(dir, 'frames', `${pad(k)}.png`), clip, fullPage: true, caret: 'hide' });
+    await shoot(page, join(dir, 'frames', `${pad(k)}.png`), clip);
   }
   const tracks = tracksOf(frames);
   const info = await page.evaluate((ids) => window.__replica.describeIds(ids), Object.keys(tracks).map(Number));

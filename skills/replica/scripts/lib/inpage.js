@@ -119,7 +119,10 @@
     if (!el || el.nodeType !== 1) return 1;
     let v = memo.get(el);
     if (v === undefined) {
-      v = parseFloat(getComputedStyle(el).opacity) * opacity(parentOf(el), memo);
+      const cs = getComputedStyle(el);
+      let f = 1;
+      for (const m of cs.filter.matchAll(/opacity\(([\d.]+)(%?)\)/g)) f *= m[2] ? m[1] / 100 : +m[1];
+      v = parseFloat(cs.opacity) * f * opacity(parentOf(el), memo);
       memo.set(el, v);
     }
     return v;

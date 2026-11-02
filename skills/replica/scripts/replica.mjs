@@ -178,17 +178,21 @@ async function compare(refDir, cloneSrc, f) {
       const name = vpName(vp);
       await lab.load('ref', join(refDir, name, 'shot.png'));
       await lab.load('clone', join(out, 'clone', name, 'shot.png'));
-      const px = await lab.compare('ref', 'clone', { title: name });
+      const cb = await readJson(join(out, 'clone', name, 'blueprint.json'));
+      // Placeholders (data-replica="placeholder") stand in for assets the clone may not reuse:
+      // layout still checks their boxes, the pixel score leaves them out.
+      const skip = cb.nodes.filter((n) => n.ph).map((n) => n.box);
+      const px = await lab.compare('ref', 'clone', { title: name, skip });
       const sheets = [];
       for (const [i, b64] of px.sheets.entries()) sheets.push(rel(await lab.write(join(out, 'sheets', px.sheets.length > 1 ? `${name}-${i + 1}.png` : `${name}.png`), b64)));
       const zooms = [];
       for (const [i, b64] of px.zooms.entries()) zooms.push(rel(await lab.write(join(out, 'sheets', `${name}-hot${i + 1}.png`), b64)));
       await lab.drop('ref', 'clone');
-      const view = { name, ratio: px.ratio, refSize: px.refSize, cloneSize: px.cloneSize, sheets, zooms, hotspots: px.hotspots };
+      const view = { name, ratio: px.ratio, refSize: px.refSize, cloneSize: px.cloneSize, sheets, zooms, hotspots: px.hotspots, placeholders: skip };
 
       let nodes = [];
       if (meta.kind === 'url') {
-        const [rb, cb] = await Promise.all([readJson(join(refDir, name, 'blueprint.json')), readJson(join(out, 'clone', name, 'blueprint.json'))]);
+        const rb = await readJson(join(refDir, name, 'blueprint.json'));
         const A = prepare(rb.nodes), B = prepare(cb.nodes);
         const m = match(A, B, Math.hypot(rb.root.box.w, Math.min(rb.root.box.h, 3000)));
         const lay = scoreLayout(m, tol);
@@ -199,7 +203,7 @@ async function compare(refDir, cloneSrc, f) {
         structural ??= { A, B, diag: Math.hypot(rb.root.box.w, Math.min(rb.root.box.h, 3000)) };
       } else {
         // No structure on the reference side: name what sits under each hotspot in the clone instead.
-        nodes = prepare((await readJson(join(out, 'clone', name, 'blueprint.json'))).nodes);
+        nodes = prepare(cb.nodes);
       }
       const [[rw, rh], [cw, ch]] = [px.refSize, px.cloneSize];
       if (rw !== cw || rh !== ch) {
@@ -222,7 +226,8 @@ async function compare(refDir, cloneSrc, f) {
     const add = (k, score, note) => score != null && (axes[k] = { score, gate: gate[k] ?? null, ...(note && { note }) });
     add('layout', mean(views.map((v) => v.layout).filter((v) => v != null)));
     add('style', mean(views.map((v) => v.style).filter((v) => v != null)));
-    add('pixels', mean(views.map((v) => pixelScore(v.ratio))), `${(mean(views.map((v) => v.ratio)) * 100).toFixed(2)}% differ`);
+    const ph = views.reduce((s, v) => s + v.placeholders.length, 0);
+    add('pixels', mean(views.map((v) => pixelScore(v.ratio))), `${(mean(views.map((v) => v.ratio)) * 100).toFixed(2)}% differ${ph ? `, ${ph} placeholder${ph > 1 ? 's' : ''} left out` : ''}`);
 
     let motion = null;
     if (meta.opts.motion > 0) {

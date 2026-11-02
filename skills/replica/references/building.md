@@ -10,6 +10,7 @@
 - **Fonts**: load the same family and weights the blueprint lists, with the project's usual mechanism (`next/font`, `@font-face`, a fontsource package). Use reference font files only when the user has the right to use them. Otherwise pick the closest free family and report it.
 - **Icons and SVGs**: `blueprint.json` has inline markup for small SVGs. Use it only when the user owns the asset or it is from an open icon set; otherwise use the project's icon library at the same size.
 - **Images**: keep the exact box size and `object-fit`. Use placeholders with the same dimensions when the user has no assets.
+- **Placeholders**: put `data-replica="placeholder"` on the stand-in (image, SVG, video). Its box is still scored on layout; its pixels are left out of the pixel score and listed in the report.
 
 ## CSS
 

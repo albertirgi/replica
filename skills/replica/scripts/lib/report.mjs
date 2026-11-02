@@ -256,7 +256,7 @@ export function reportMd(r) {
     '|---|---|---|',
     ...Object.entries(r.axes).map(([k, a]) => `| ${k} | ${a.score.toFixed(1)}${a.note ? ` (${a.note})` : ''} | ${tick(a)} |`),
     '',
-    ...r.views.map((v) => `- ${v.name}: reference ${v.refSize.join('×')} · yours ${v.cloneSize.join('×')}${v.refSize[1] !== v.cloneSize[1] ? ` (${v.cloneSize[1] > v.refSize[1] ? '+' : ''}${v.cloneSize[1] - v.refSize[1]}px tall)` : ''} · ${(v.ratio * 100).toFixed(2)}% pixels differ`),
+    ...r.views.map((v) => `- ${v.name}: reference ${v.refSize.join('×')} · yours ${v.cloneSize.join('×')}${v.refSize[1] !== v.cloneSize[1] ? ` (${v.cloneSize[1] > v.refSize[1] ? '+' : ''}${v.cloneSize[1] - v.refSize[1]}px tall)` : ''} · ${(v.ratio * 100).toFixed(2)}% pixels differ${v.placeholders?.length ? ` · placeholders left out of pixels: ${v.placeholders.map(at).join(' ')}` : ''}`),
   ];
   if (r.prev && r.overall < r.prev.overall) out.push('', `> Score went down since round ${r.prev.round}. Undo the last change that made things worse before trying something new.`);
   out.push('', '## Fix next (highest gain first)', '');

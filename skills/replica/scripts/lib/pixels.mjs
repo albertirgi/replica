@@ -32,11 +32,15 @@ function lab() {
   // Mismatch mask over the union of both sizes. A pixel matches when some pixel within 1px of it on
   // the other side looks the same, both ways round: anti-aliasing and sub-pixel shifts are not
   // differences (the layout axis measures position exactly).
-  function diff(a, b) {
+  // Boxes in `skip` (placeholders) are left out entirely: neither differing nor counted in the area.
+  function diff(a, b, skip = []) {
     const w = Math.max(a.width, b.width), h = Math.max(a.height, b.height);
     const A = pixels(a, w, h), B = pixels(b, w, h);
     const mask = new Uint8Array(w * h);
-    let count = 0;
+    const off = new Uint8Array(w * h);
+    for (const [sx, sy, sw, sh] of skip)
+      for (let y = Math.max(0, Math.floor(sy)); y < Math.min(h, Math.ceil(sy + sh)); y++) off.fill(1, y * w + Math.max(0, Math.floor(sx)), y * w + Math.min(w, Math.ceil(sx + sw)));
+    let count = 0, skipped = 0;
     const near = (P, Q2, x, y, qw, qh) => {
       const i = (y * w + x) * 4;
       for (const [dx, dy] of AROUND) {
@@ -48,6 +52,10 @@ function lab() {
     };
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
+        if (off[y * w + x]) {
+          skipped++;
+          continue;
+        }
         const inA = x < a.width && y < a.height, inB = x < b.width && y < b.height;
         // 1 = looks different, 2 = only one side has a pixel here (sizes differ; reported separately).
         const bad = inA !== inB ? 2 : inA && !(near(A, B, x, y, b.width, b.height) && near(B, A, x, y, a.width, a.height)) ? 1 : 0;
@@ -57,7 +65,7 @@ function lab() {
         }
       }
     }
-    return { w, h, mask, count };
+    return { w, h, mask, count, area: w * h - skipped };
   }
 
   // Connected 16px cells with enough differing pixels, as rectangles, biggest first.
@@ -172,9 +180,9 @@ function lab() {
 
     // Full comparison of two stills: score inputs, hotspots, an overview sheet (cut into bands for
     // tall pages) and a zoomed sheet per hotspot.
-    async compare(refKey, cloneKey, { title = '', hot = 6, zooms = 4 } = {}) {
+    async compare(refKey, cloneKey, { title = '', hot = 6, zooms = 4, skip = [] } = {}) {
       const ref = images.get(refKey), clone = images.get(cloneKey);
-      const d = diff(ref, clone);
+      const d = diff(ref, clone, skip);
       const spots = hotspots(d, hot);
       const s = Math.min(1, 760 / d.w);
       const band = Math.ceil(1100 / s);
@@ -188,7 +196,7 @@ function lab() {
         const z = Math.max(0.25, Math.min(3, 560 / r[2], 420 / r[3]));
         zoomed.push(await sheet(ref, clone, d, r, z, `hotspot ${i + 1}`, [h]));
       }
-      return { size: [d.w, d.h], refSize: [ref.width, ref.height], cloneSize: [clone.width, clone.height], count: d.count, ratio: d.count / (d.w * d.h), hotspots: spots, sheets, zooms: zoomed };
+      return { size: [d.w, d.h], refSize: [ref.width, ref.height], cloneSize: [clone.width, clone.height], count: d.count, ratio: d.count / Math.max(1, d.area), hotspots: spots, sheets, zooms: zoomed };
     },
 
     ratio(refKey, cloneKey) {

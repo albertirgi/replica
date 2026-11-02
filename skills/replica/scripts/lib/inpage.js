@@ -376,6 +376,7 @@
       const n = { id: idOf(el), p: up ? index.get(up) : null, k, ...ident(el, k), path: pathOf(el, root), box: b, s: styleOf(el, cs, k) };
       if (o < 0.98) n.s.eo = round(o, 2);
       if (n.tag === 'svg' && el.outerHTML.length <= 4000) n.svg = el.outerHTML;
+      if (el.dataset?.replica === 'placeholder') n.ph = 1;
       index.set(el, n.id);
       nodes.push(n);
       return k !== 'media';

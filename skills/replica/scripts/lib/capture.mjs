@@ -104,7 +104,10 @@ export async function captureUrl(browser, o, out) {
       const cdp = await context.newCDPSession(page);
       await cdp.send('Animation.enable');
       await cdp.send('Animation.setPlaybackRate', { playbackRate: 0 }); // freeze the document timeline
-      await page.goto(o.url, { waitUntil: 'load', timeout: 60_000 });
+      const res = await page.goto(o.url, { waitUntil: 'load', timeout: 60_000 });
+      // An error page captures and compares perfectly well, which is exactly the problem: stop here.
+      if (res && res.status() >= 400)
+        throw new Error(`${o.url} answered HTTP ${res.status()} ${res.statusText()}. ${res.status() === 401 || res.status() === 403 ? 'It may need a login (--storage) or refuse automated browsers; if so, capture a screen recording of it instead.' : 'Check the URL.'}`);
       await settleNetwork(page);
       if (o.hide) await page.addStyleTag({ content: `${o.hide} { visibility: hidden !important; }` });
       if (o.wait) {

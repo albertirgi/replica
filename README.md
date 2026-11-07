@@ -4,9 +4,9 @@
 
 Replica is an [Agent Skill](https://agentskills.io) for Claude Code and other coding agents. You point your agent at a live site, a local page, a screenshot or a screen recording. The agent rebuilds that UI in your own codebase, then Replica measures the rebuild against the reference and scores it on four axes: layout, style, pixels and motion. The agent keeps going until the score passes, so "close enough" is a number rather than a judgement call.
 
-[![Replica demo: an agent's clone of the family.co hero looks done but its words rise flat; Replica catches the missing 3D tilt, scores round 1 at 77.8, and round 2 passes](.github/assets/demo.gif)](.github/assets/demo.mp4)
+[![Replica demo: an agent's clone of the family.co hero looks done but its words rise flat; Replica catches the missing 3D tilt, scores round 1 at 77.8, and round 2 passes](.github/assets/demo-family.gif)](.github/assets/demo-family.mp4)
 
-<sub>25 seconds. The reference is the animated hero of [family.co](https://family.co), shown to demonstrate. Its headline font is licensed, so the clone uses Inter and runs at level `structure`. The illustrations and their motion are family.co's own, recorded from the site and reused for this demo. Every score, screenshot and animation frame comes from real Replica runs; findings are trimmed to fit. [Watch with sound (MP4)](.github/assets/demo.mp4).</sub>
+<sub>25 seconds. The reference is the animated hero of [family.co](https://family.co), shown to demonstrate. Its headline font is licensed, so the clone uses Inter and runs at level `structure`. The illustrations and their motion are family.co's own, recorded from the site and reused for this demo. Every score, screenshot and animation frame comes from real Replica runs; findings are trimmed to fit. [Watch with sound (MP4)](.github/assets/demo-family.mp4).</sub>
 
 ## Why
 
@@ -79,31 +79,30 @@ The skill makes the agent:
 
 ### What a report looks like
 
-From the self-test, comparing a clone with five planted bugs:
+Round 1 of the family.co demo, at level `structure` (findings trimmed):
 
 ```
-# Replica · round 1 · level `faithful`
-**Score 79.8 — NOT YET ✗**
-| layout 63.7 ✗ | style 94.8 ✗ | pixels 71.2 ✗ | motion 89.6 ✗ |
+# Replica · round 1 · level `structure`
+**Score 77.8 — NOT YET ✗**
+| layout 99.8 ✓ | style 89.3 info | pixels 76.1 info | motion 55.9 ✗ |
 
 ## Fix next (highest gain first)
-1. missing · div .card with 2 things inside (h3 "Converge", p "Fix the top…") has no counterpart in yours. (+22.4 layout)
-2. layout · 9 elements sit 16px too high, starting at p "Replica measures…". Likely cause: h1 "Ship interfaces…"
-   is 16px shorter than the reference (font-size 56 (yours 48) · line-height 64 (yours 56)) — fix that and these follow. (+13.9 layout)
-3. motion · p "Replica measures…" — y: lasts 300ms (ref 600ms), curve: ref out-cubic (cubic-bezier(0.33, 1, 0.68, 1)),
-   yours linear … (+10.4 motion)
-5. style · div .card — border-radius 12px (yours 4px). Same on 1 more: div .card [509,450 421×110]. (+2.4 style)
-7. style · a "Get started" — background-color #5b4bff (yours #4f46e5). (+0.7 style)
+1. motion · span "favorite" — height: reference goes 50.4 → 74.8 from 333ms over 803ms
+   (≈ cubic-bezier(0.15, 1.21, 0.12, 0.99) (nearest named: out-expo)); yours doesn't … (+12.1 motion)
+2. motion · span "crypto" — height: reference goes 43.8 → 74.8 from 600ms over 803ms … (+11.4 motion)
+5. layout · p "Explore Ethereum with the best wallet for iOS. …" — 9px too far right, 18px too narrow. (+0.2 layout)
+6. style · h1 "Your favorite crypto wallet." — font-family Family (yours Inter). Same on 4 more … (+8.8 style)
+7. style · a "Download on iOS" — font-weight 500 (yours 400). Same on 1 more: a "Watch the Video". (+1.9 style)
 ```
 
 Each round also writes comparison sheets: the reference, yours and the diff, with numbered hotspots.
 
-![Reference, yours and the diff side by side, with numbered hotspots](.github/assets/sheet.png)
+![family.co reference, the clone and the diff side by side, with numbered hotspots](.github/assets/family-sheet.png)
 
 Hotspots are zoomed, and motion is compared frame by frame:
 
-![A zoomed hotspot](.github/assets/hotspot.png)
-![Reference and yours over time](.github/assets/motion.png)
+![A zoomed hotspot: the headline in family.co's font and in Inter](.github/assets/family-hotspot.png)
+![family.co reference and the clone over the first two seconds](.github/assets/family-motion.png)
 
 ## CLI
 

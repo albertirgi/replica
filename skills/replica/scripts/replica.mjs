@@ -180,15 +180,24 @@ async function compare(refDir, cloneSrc, f) {
       await lab.load('clone', join(out, 'clone', name, 'shot.png'));
       const cb = await readJson(join(out, 'clone', name, 'blueprint.json'));
       // Placeholders (data-replica="placeholder") stand in for assets the clone may not reuse:
-      // layout still checks their boxes, the pixel score leaves them out.
-      const skip = cb.nodes.filter((n) => n.ph).map((n) => n.box);
+      // layout still checks their boxes, the pixel score leaves them out, except where something
+      // paints in front (a headline over a background illustration): those pixels still count.
+      // ponytail: holes are the clone's boxes; a misplaced clone hides a bit of the reference's text.
+      const byId = new Map(cb.nodes.map((n) => [n.id, n]));
+      const above = (n) => { const ids = new Set(); for (let p = n.p; p != null; p = byId.get(p)?.p) ids.add(p); return ids; };
+      const parents = new Set(cb.nodes.map((n) => n.p));
+      const paints = (n) => !parents.has(n.id) || n.s.bg || n.s.bgi || n.s.bw || n.s.sh;
+      const skip = cb.nodes.filter((n) => n.ph).map((ph) => {
+        const up = above(ph);
+        return [...ph.box, cb.nodes.filter((n) => !n.ph && paints(n) && !up.has(n.id) && !above(n).has(ph.id)).map((n) => n.box)];
+      });
       const px = await lab.compare('ref', 'clone', { title: name, skip });
       const sheets = [];
       for (const [i, b64] of px.sheets.entries()) sheets.push(rel(await lab.write(join(out, 'sheets', px.sheets.length > 1 ? `${name}-${i + 1}.png` : `${name}.png`), b64)));
       const zooms = [];
       for (const [i, b64] of px.zooms.entries()) zooms.push(rel(await lab.write(join(out, 'sheets', `${name}-hot${i + 1}.png`), b64)));
       await lab.drop('ref', 'clone');
-      const view = { name, ratio: px.ratio, refSize: px.refSize, cloneSize: px.cloneSize, sheets, zooms, hotspots: px.hotspots, placeholders: skip };
+      const view = { name, ratio: px.ratio, refSize: px.refSize, cloneSize: px.cloneSize, sheets, zooms, hotspots: px.hotspots, placeholders: skip.map((b) => b.slice(0, 4)) };
 
       let nodes = [];
       if (meta.kind === 'url') {

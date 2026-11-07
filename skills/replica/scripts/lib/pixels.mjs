@@ -33,13 +33,16 @@ function lab() {
   // the other side looks the same, both ways round: anti-aliasing and sub-pixel shifts are not
   // differences (the layout axis measures position exactly).
   // Boxes in `skip` (placeholders) are left out entirely: neither differing nor counted in the area.
+  // A skip box's optional fifth item lists holes, boxes painted in front of it, which still count.
   function diff(a, b, skip = []) {
     const w = Math.max(a.width, b.width), h = Math.max(a.height, b.height);
     const A = pixels(a, w, h), B = pixels(b, w, h);
     const mask = new Uint8Array(w * h);
     const off = new Uint8Array(w * h);
-    for (const [sx, sy, sw, sh] of skip)
-      for (let y = Math.max(0, Math.floor(sy)); y < Math.min(h, Math.ceil(sy + sh)); y++) off.fill(1, y * w + Math.max(0, Math.floor(sx)), y * w + Math.min(w, Math.ceil(sx + sw)));
+    for (const [sx, sy, sw, sh, holes = []] of skip)
+      for (let y = Math.max(0, Math.floor(sy)); y < Math.min(h, Math.ceil(sy + sh)); y++)
+        for (let x = Math.max(0, Math.floor(sx)); x < Math.min(w, Math.ceil(sx + sw)); x++)
+          if (!holes.some(([hx, hy, hw, hh]) => x + 0.5 >= hx && x + 0.5 < hx + hw && y + 0.5 >= hy && y + 0.5 < hy + hh)) off[y * w + x] = 1;
     let count = 0, skipped = 0;
     const near = (P, Q2, x, y, qw, qh) => {
       const i = (y * w + x) * 4;

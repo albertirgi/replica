@@ -15,7 +15,7 @@ Rebuild what the user points at, then prove it. `capture` turns the reference in
 2. **Never game the score.** Don't embed screenshots or video frames of the reference, iframe or proxy the reference, paste its rendered HTML wholesale, edit anything under `.replica/`, or lower `--level` to get a pass. Build real UI in the user's stack.
 3. **Use the project's stack.** Read `package.json` and the nearest existing components first. Match the framework, styling approach and animation library already in use. Add a dependency only when the reference needs something the project cannot do.
 4. **Fix in report order, a few at a time.** Items at the top often cause items lower down: one cascade fix can move dozens of elements. Re-run `compare` after each batch. Never stack ten speculative changes.
-5. **Respect ownership.** The reference's fonts, images, icons and copy belong to their owners. Use the user's own assets and copy where they have them. Otherwise ask, or use placeholders with the same dimensions, marked `data-replica="placeholder"`: `compare` still checks their boxes but leaves their pixels out of the pixel score. Say in the final message which reference assets you reused.
+5. **Respect ownership.** The reference's fonts, images, icons and copy belong to their owners. Use the user's own assets and copy where they have them. Otherwise ask, or use placeholders with the same dimensions, marked `data-replica="placeholder"`: `compare` still checks their boxes but leaves their pixels out of the pixel score (whatever is painted in front of them still counts). Say in the final message which reference assets you reused.
 
 ## 0. Scope
 

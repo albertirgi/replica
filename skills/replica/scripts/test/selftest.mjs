@@ -7,7 +7,8 @@
 //   motion-clone-bad.html  → generic easing, no spin, no pops: must fail on motion, with the card's spring
 //                            reported once for everything inside it and the missing spin named
 // and a section under a header that compacts on resize, against a clone with a placeholder:
-//   resize-clone.html → must score 100 on pixels: the still fires no resize, the placeholder is left out
+//   resize-clone.html → pixels just under 100: the still fires no resize, the placeholder is left out,
+//   but the caption chip painted over it (dark in the clone) still counts
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -83,7 +84,8 @@ try {
   r = run('compare', rref, fixture('resize-clone.html'));
   assert.equal(r.code, 0, r.out);
   const rs = JSON.parse(await readFile(join(dir, 'resize', 'round-1', 'score.json'), 'utf8'));
-  assert.equal(rs.axes.pixels, 100, 'no resize fired for the still, placeholder left out');
+  assert.ok(rs.axes.pixels > 85, `no resize fired for the still, placeholder left out (pixels ${rs.axes.pixels})`);
+  assert.ok(rs.axes.pixels < 100, 'the chip over the placeholder still counts');
   assert.match(await readFile(join(dir, 'resize', 'round-1', 'report.md'), 'utf8'), /placeholders left out of pixels: \[40,88 320×160\]/);
   console.log('selftest ok');
 } finally {

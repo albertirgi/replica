@@ -31,7 +31,7 @@ Replica gives the agent what a careful frontend engineer would gather:
 
 - **Markup-agnostic.** `<a><span>Go</span></a>` equals `<a>Go</a>`. A painted wrapper equals an element that paints itself. An inset `box-shadow` ring equals a `border`. A white background on a white page counts as nothing. Your clone can use any framework, class names or component structure.
 - **Nested motion counted once.** When a card springs in, everything inside it moves too. That is one finding on the card ("12 elements inside move with it… fix it here and they follow"), not twelve. A child's own motion (a stagger, a pop, a spin) is still checked on its own.
-- **Placeholders don't count against you.** Mark a stand-in for an asset you can't reuse with `data-replica="placeholder"`. Its box is still checked; its pixels are left out of the pixel score and listed in the report.
+- **Placeholders don't count against you.** Mark a stand-in for an asset you can't reuse with `data-replica="placeholder"`. Its box is still checked; its pixels are left out of the pixel score and listed in the report. Text painted over it still counts.
 - **Technique-agnostic motion.** A CSS `@keyframes` reference and a Web Animations API or Framer Motion clone with the same timing score 100.
 - **Deterministic.** Pages run on a virtual clock with frozen CSS timelines, a seeded `Math.random`, and fixed time, locale and DPR. Stills are shot from the viewport, not a full-page resize that makes some sites re-lay out. Capturing a live, animated production site twice gives a 100/100 match, so every difference is real.
 
@@ -137,7 +137,7 @@ The self-test captures three fixture pages and compares clones against them.
 
 - **A hero section.** The reference itself must score exactly 100. A clone with different markup and JS-driven animations must pass `faithful`. A clone with five planted bugs must fail, and the report must name every one.
 - **An animated deploy card.** It has a spring, staggered rows, popping dots, a 360° spin, a growing bar and a colour change. The blueprint must read each one back exactly as authored (the spring's stiffness to within a few percent). A clone rebuilt from the report must pass. A clone with generic easing must fail, with the spring reported once and the missing spin named.
-- **A section under a header that compacts on resize.** A clone with a placeholder where the artwork was must score 100 on pixels: the still fires no resize, and the placeholder is left out.
+- **A section under a header that compacts on resize.** A clone with a placeholder where the artwork was must score just under 100 on pixels: the still fires no resize, the placeholder is left out, and a caption chip painted over it still counts.
 
 ## Acknowledgements
 

@@ -4,9 +4,9 @@
 
 Replica is an [Agent Skill](https://agentskills.io) for Claude Code and other coding agents. You point your agent at a live site, a local page, a screenshot or a screen recording. The agent rebuilds that UI in your own codebase, then Replica measures the rebuild against the reference and scores it on four axes: layout, style, pixels and motion. The agent keeps going until the score passes, so "close enough" is a number rather than a judgement call.
 
-[![Replica demo: an agent's clone of an animated award-nominated hero looks done but scores 67.2; Replica names the fixes, down to one animation keyframe, and round 4 passes at 98.1](.github/assets/demo.gif)](.github/assets/demo.mp4)
+[![Replica demo: an agent's clone of the family.co hero looks done but its words rise flat; Replica catches the missing 3D tilt, scores round 1 at 77.8, and round 2 passes](.github/assets/demo.gif)](.github/assets/demo.mp4)
 
-<sub>25 seconds. The reference is the animated hero of [endcap.design](https://endcap.design), an Awwwards nominee, shown to demonstrate. Every score, screenshot and animation frame comes from real Replica runs; findings are trimmed to fit. [Watch with sound (MP4)](.github/assets/demo.mp4).</sub>
+<sub>25 seconds. The reference is the animated hero of [family.co](https://family.co), shown to demonstrate. Its headline font is licensed, so the clone uses Inter and runs at level `structure`. The illustrations and their motion are family.co's own, recorded from the site and reused for this demo. Every score, screenshot and animation frame comes from real Replica runs; findings are trimmed to fit. [Watch with sound (MP4)](.github/assets/demo.mp4).</sub>
 
 ## Why
 
